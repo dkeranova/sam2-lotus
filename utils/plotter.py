@@ -126,10 +126,12 @@ class Plotter():
         spec = gridspec.GridSpec(rows, cols, fig, wspace=0, hspace=0)
         spec.tight_layout(fig)
         for idx, img in enumerate(imgs):
-            img = img.cpu().detach().squeeze()
+            img = img.cpu().detach().squeeze() #SAM2 needs RGB so we copy image into 3 channels, but we want to plot as grayscale
             if 'int' in str(img.dtype) :
                 img = np.rot90(img, 3)
                 plt.subplot(spec[0, idx]).imshow(img)
+            elif img.shape[0] == 3:
+                plt.subplot(spec[0, idx]).imshow(img[0], cmap='gray', vmin=0, vmax=1, interpolation='none', norm=None)
             else:
                 plt.subplot(spec[0, idx]).imshow(img[:, :], cmap='gray', vmin=0, vmax=1, interpolation='none', norm=None)
             plt.axis('off')

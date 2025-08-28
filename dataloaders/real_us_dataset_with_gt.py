@@ -14,7 +14,7 @@ class RealUSGTDataset(Dataset):
         self.root_dir_imgs = root_dir + 'imgs/'
         self.root_dir_masks = root_dir + 'masks/'
         self.transform_img = transforms.Compose([
-            transforms.Grayscale(1),
+            #transforms.Grayscale(1),    not for SAM2
             transforms.Resize([SIZE_W, SIZE_H], transforms.InterpolationMode.BICUBIC),
             transforms.ToTensor(),
             transforms.Normalize((0.5,), (0.5,))
@@ -33,7 +33,7 @@ class RealUSGTDataset(Dataset):
     
     def __getitem__(self, idx):
         image_path = os.path.join(self.root_dir_imgs, self.image_files[idx])
-        image = Image.open(image_path)#.convert('L')
+        image = Image.open(image_path).convert('RGB') # SAM2 only takes RGB images
 
         mask_path = os.path.join(self.root_dir_masks, self.masks_files[idx])
         mask = np.asarray(Image.open(mask_path))

@@ -94,4 +94,23 @@ class DiceLoss(nn.Module):
         cardinality = torch.sum(probas + true_1_hot, dims)
         dice_loss = (2. * intersection / (cardinality + eps)).mean()
         return (1 - dice_loss), pos_prob
+    
+
+class SAM2Unet_deep_loss(nn.Module):
+
+    def structure_loss(self, pred, mask):
+        weit = 1 + 5*torch.abs(F.avg_pool2d(mask, kernel_size=31, stride=1, padding=15) - mask)
+        wbce = F.binary_cross_entropy_with_logits(pred, mask, reduce='none')
+        wbce = (weit*wbce).sum(dim=(2, 3)) / weit.sum(dim=(2, 3))
+        pred = torch.sigmoid(pred)
+        inter = ((pred * mask)*weit).sum(dim=(2, 3))
+        union = ((pred + mask)*weit).sum(dim=(2, 3))
+        wiou = 1 - (inter + 1)/(union - inter+1)
+        return (wbce + wiou).mean()
+
+    def forward(self, predictions, target):
+        loss0 = self.structure_loss(predictions[0], target)
+        loss1 = self.structure_loss(predictions[1], target)
+        loss2 = self.structure_loss(predictions[2], target)
+        return loss0 + loss1 + loss2
 

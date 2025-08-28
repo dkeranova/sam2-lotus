@@ -6,6 +6,7 @@ from tqdm.auto import tqdm
 from cut.cut_trainer import CUTTrainer
 import helpers
 from models.us_rendering_model import UltrasoundRendering
+from models.sam2.build_sam import build_sam2_for_lotus
 
 
 class Trainer:
@@ -18,9 +19,12 @@ class Trainer:
         InnerModelClass = helpers.load_model_class(hparams.inner_model)
         self.inner_model = InnerModelClass(params=hparams)
         
-        if not hparams.outer_model_monai: 
-            OuterModelClass = helpers.load_model_class(hparams.outer_model)
-            outer_model = OuterModelClass(hparams=hparams)
+        if not hparams.outer_model_monai:
+            if hparams.outer_model == 'sam2':
+                outer_model = build_sam2_for_lotus(config_file="configs/sam2.1/sam2.1_hiera_l.yaml",ckpt_path="models/sam2/checkpoints/sam2.1_hiera_large.pt",device='cuda')
+            else:
+                OuterModelClass = helpers.load_model_class(hparams.outer_model)
+                outer_model = OuterModelClass(hparams=hparams)
             self.module = ModuleClass(params=hparams, inner_model=self.inner_model, outer_model=outer_model)
         else:
             self.module = ModuleClass(params=hparams, inner_model=self.inner_model)

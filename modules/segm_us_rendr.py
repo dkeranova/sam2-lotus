@@ -1,7 +1,7 @@
 import torch
 import torchvision.transforms.functional as F
 import torchvision.transforms as transforms
-from utils.losses import SoftDiceLoss, DiceLoss
+from utils.losses import SoftDiceLoss, DiceLoss, SAM2Unet_deep_loss
 from utils.helpers import AddGaussianNoise
 from torch.optim.lr_scheduler import StepLR
 import os
@@ -59,7 +59,10 @@ class SegmentationUSRenderedModule(torch.nn.Module):
 
         else:
             self.outer_model = outer_model.to(params.device)
-            self.loss_function = SoftDiceLoss()  # without thresholding is soft DICE loss
+            if params.outer_model == 'sam2':
+                self.loss_function = SAM2Unet_deep_loss()
+            else:
+                self.loss_function = SoftDiceLoss()  # without thresholding is soft DICE loss
             # self.loss_function = DiceLoss()     #default threshold is 0.5
 
 
@@ -88,6 +91,8 @@ class SegmentationUSRenderedModule(torch.nn.Module):
     def rendering_forward(self, input):
         us_sim = self.USRenderingModel(input.squeeze()) 
         us_sim_resized = F.resize(us_sim.unsqueeze(0).unsqueeze(0), (SIZE_W, SIZE_H)).float()
+        if self.params.outer_model == 'sam2':
+            us_sim_resized = us_sim_resized.repeat(1,3,1,1) # convert grayscale to RGB by copying channel. SAM2 can only process RGB images.
         # self.USRenderingModel.plot_fig(us_sim.squeeze(), "us_sim", True)
 
         return us_sim_resized          
@@ -98,6 +103,9 @@ class SegmentationUSRenderedModule(torch.nn.Module):
         if self.params.outer_model_monai:
             loss = self.loss_function(output, label)
             pred=output
+        elif self.params.outer_model == 'sam2':
+            loss = self.loss_function(output, label)
+            pred = output[2]
         else:
             loss, pred = self.loss_function(output, label)
 

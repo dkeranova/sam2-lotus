@@ -17,7 +17,7 @@ class RealUSDataset(Dataset):
 
     def __getitem__(self, idx):
         image_path = os.path.join(self.root_dir, self.image_files[idx])
-        image = Image.open(image_path).convert('L')
+        image = Image.open(image_path).convert('RGB') # SAM2 only takes RGB images
 
         if self.transform:
             image = self.transform(image)

@@ -53,7 +53,7 @@ class SingleDataset(BaseDataset):
             A_paths(str) - - the path of the image
         """
         A_path = self.A_paths[index]
-        A_img = Image.open(A_path)        #.convert('RGB')
+        A_img = Image.open(A_path).convert('RGB') # SAM2 only takes RGB images
         A_img = T.ToTensor()(A_img)
         return {'A': A_img, 'A_paths': A_path}
 
