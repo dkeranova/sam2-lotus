@@ -5,6 +5,7 @@ import os
 import nibabel as nib
 from torch.utils.data import random_split
 import torchvision.transforms as transforms
+import helpers
 
 
 SIZE_W = 256
@@ -37,7 +38,7 @@ class CT3DLabelmapDataset(Dataset):
                 transforms.Resize([380, 380], transforms.InterpolationMode.NEAREST),
                 transforms.CenterCrop((SIZE_W)),
             ])
-        else:
+        else: # median nerve
             # self.transform_img = transforms.Compose([
             #     transforms.ToTensor(),
             #     # transforms.RandomAffine(degrees=(0, 30), translate=(0.2, 0.2), scale=(1.0, 2.0), fill=9),
@@ -45,9 +46,11 @@ class CT3DLabelmapDataset(Dataset):
             #     # transforms.RandomVerticalFlip()
             # ])
             self.transform_img = transforms.Compose([
+                helpers.CropAndWarpWrist(),
                 transforms.ToTensor(),
-                transforms.Resize([380, 380], transforms.InterpolationMode.NEAREST),
-                transforms.CenterCrop((SIZE_W)),
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomRotation(15, interpolation=transforms.InterpolationMode.NEAREST, expand=False, fill=12),
+                transforms.Resize([SIZE_W, SIZE_H], transforms.InterpolationMode.NEAREST),
             ])
 
         if self.params.pred_label == 13:    # spine
@@ -71,7 +74,7 @@ class CT3DLabelmapDataset(Dataset):
         volumes = []
 
         for idx, folder in enumerate(full_labelmap_path):
-            labelmap = [lm for lm in sorted(os.listdir(folder)) if lm.endswith('.nii.gz') and "_" not in lm][0]
+            labelmap = [lm for lm in sorted(os.listdir(folder)) if lm.endswith('.nii.gz') or lm.endswith('.nii')][0]
             vol_nib = nib.load(folder + labelmap)
             vol = vol_nib.get_fdata()
 

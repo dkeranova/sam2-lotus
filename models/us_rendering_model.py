@@ -283,7 +283,10 @@ class UltrasoundRendering(torch.nn.Module):
                     self.plot_fig(result_np, result_list[k], True)
                 # print(result_list[k], ", ", result_np.shape)
 
-        intensity_map_masked = self.warp_img(intensity_map)
+        if self.params.warp_img:
+            intensity_map_masked = self.warp_img(intensity_map)
+        else:
+            intensity_map_masked = intensity_map
         intensity_map_masked = torch.rot90(intensity_map_masked, 3)
         
         if self.params.debug:  self.plot_fig(intensity_map_masked, "intensity_map_masked", True)

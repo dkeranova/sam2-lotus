@@ -48,13 +48,14 @@ class Trainer:
             if (label != 0).any():  # if not empty label
                 us_rendr = self.module.rendering_forward(input)
 
-                us_rendr_cut = us_rendr.clone().detach()
-                self.cut_trainer.train_cut(self.module, us_rendr_cut, epoch, dataloader_real_us_iterator, iter_data_time)
-                
-                #if using the identity image from CUT instead of us_rendr directly
-                if self.hparams.use_idtB:  
-                    idt_B = self.cut_trainer.get_idtB(us_rendr)
-                    us_rendr = idt_B
+                if (epoch > self.hparams.delay_cut_train):
+                    us_rendr_cut = us_rendr.clone().detach()
+                    self.cut_trainer.train_cut(self.module, us_rendr_cut, epoch, dataloader_real_us_iterator, iter_data_time)
+                    
+                    #if using the identity image from CUT instead of us_rendr directly
+                    if self.hparams.use_idtB:  
+                        idt_B = self.cut_trainer.get_idtB(us_rendr)
+                        us_rendr = idt_B
 
                 #add augmentations during training
                 if self.hparams.seg_net_input_augmentations_noise_blur or self.hparams.seg_net_input_augmentations_rand_crop:
@@ -113,7 +114,7 @@ class Trainer:
                     val_input_copy =  val_input.clone().detach()    
                     us_rendr_val = self.module.rendering_forward(val_input)   
 
-                    if self.hparams.use_idtB:
+                    if self.hparams.use_idtB and epoch > self.hparams.delay_cut_train:
                         idt_B_val = self.cut_trainer.get_idtB(us_rendr_val)
                         us_rendr_val = idt_B_val
 

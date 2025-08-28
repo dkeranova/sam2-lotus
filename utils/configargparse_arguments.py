@@ -54,6 +54,7 @@ def build_configargparser(parser):
 
     parser.add_argument("--max_epochs", default=200, type=int)
     parser.add_argument("--min_epochs", default=10, type=int)
+    parser.add_argument("--delay_cut_train", default=20, type=int)
     parser.add_argument("--early_stopping_patience", default=10, type=int)
     parser.add_argument("--validate_every_n_steps", default=1, type=int)
     

@@ -2,6 +2,9 @@ import torch
 import os
 from utils.utils import get_class_by_path
 from cut.data import create_dataset as cut_create_dataset
+import numpy as np
+from torchvision.transforms import CenterCrop
+import random
 
 from utils.early_stopping import EarlyStopping
 
@@ -82,3 +85,25 @@ def add_online_augmentations(hparams, module, input, label):
 
     return input, label
 
+
+class CropAndWarpWrist(torch.nn.Module):
+    def forward(self, img):
+        image = np.asarray(img)
+        column_has_content = ~np.all(image == image[0,:], axis=0)
+        x_min = np.min(np.where(image == 13))
+        x_max = np.max(np.where(image == 13))
+
+        img = img[x_min:x_max,column_has_content]
+        img[np.where(np.asarray(img)==9)] = 12
+        return img
+    
+class RandomlySizedCrop(torch.nn.Module):
+    def __init__(self, range_h=None, range_w=None):
+        super().__init__()
+        self.range_h = range_h
+        self.range_w = range_w
+
+    def forward(self, img):
+        h = random.randint(self.range_h[0], self.range_h[1])
+        w = random.randint(self.range_w[0], self.range_w[1])
+        return CenterCrop((h,w))(img)

@@ -19,7 +19,10 @@ class CUTTrainer():
         self.cut_plot_figs = []
         self.data_cut_real_us = []
         self.plotter = Plotter()
-        self.cut_model = cut_create_model(opt_cut)   
+        self.cut_model = cut_create_model(opt_cut)
+        # define axis for loss metrics in wandb
+        for name in self.cut_model.loss_names:
+            wandb.define_metric("loss_" + name, step_metric="epoch")
 
     def cut_optimize_parameters(self, module, dice_loss):
         # update Discriminator

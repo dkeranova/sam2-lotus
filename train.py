@@ -10,12 +10,12 @@ from cut.lotus_options import LOTUSOptions
 import helpers
 import trainer
 
-MANUAL_SEED = False
+MANUAL_SEED = True
 
 
 if __name__ == "__main__":
 
-    if MANUAL_SEED: torch.manual_seed(2023)
+    if MANUAL_SEED: torch.manual_seed(2024)
     # ------------------------
     # TRAINING ARGUMENTS
     # ------------------------
@@ -40,7 +40,15 @@ if __name__ == "__main__":
     
     hparams.exp_name = str(random.randint(0, 1000)) + "_" + hparams.exp_name
 
-    if hparams.logging: wandb.init(name=hparams.exp_name, project=hparams.project_name) #, silent=True)
+    if hparams.logging: 
+        wandb.init(name=hparams.exp_name, project=hparams.project_name) #, silent=True)
+        wandb.define_metric("epoch")
+        wandb.define_metric("seg_train_loss_epoch", step_metric="epoch")
+        wandb.define_metric("seg_val_loss_epoch", step_metric="epoch")
+        wandb.define_metric("stoppcrit_loss_epoch", step_metric="epoch")
+        wandb.define_metric("stopp_crit|real_us|reconstructed_us|seg_pred|gt_label", step_metric="epoch")  
+        wandb.define_metric("default_renderer|labelmap|defaultUS|learnedUS|seg_pred|gt", step_metric="epoch")
+        wandb.define_metric("real_A|fake_B|real_B|idt_B", step_metric="epoch")
     plotter = Plotter()
 
     argparse_summary(hparams, parser)
